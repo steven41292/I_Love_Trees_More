@@ -36,7 +36,7 @@ public class BTree2<T extends Comparable<T>> {
 		treeSize = _treeSize;
 		indexArr = _indexArr;
 		database = _database;
-
+		
 		if(debug) System.out.println("********** B TREE 2 RESULTS **********\n");
 		
 		// run the code below for different max children values
@@ -44,19 +44,19 @@ public class BTree2<T extends Comparable<T>> {
 			M = mArr[mIndex]; // get M (max children for this run)
 		
 			// initialize the tree
-			BTree2<String, String> st = new BTree2<String, String>();
+			BTree2<String> st = new BTree2<String>();
 			
 			// add each node in the database to the b tree and time it
 			startCpuTimeNano = getCpuTime();
 			for(int i=0; i<database.size(); i++){
 				Tuple t = database.get(i);
-				st.put(t.getKey(), t.getAttribute());
+				st.insert(t.getKey());
 			}
 			endCpuTimeNano = getCpuTime() - startCpuTimeNano;
 			double avgInsertionCpuTimeNano = endCpuTimeNano/totalIterations;
 
 			int index;
-			String val;
+			boolean val;
 			accesses = 0;
 			
 			// search for the random nodes and find time it
@@ -64,7 +64,7 @@ public class BTree2<T extends Comparable<T>> {
 			for(int i=0; i<totalIterations; i++){
 				index = indexArr[i];
 				String keyName = "key" + index;
-				val = st.get(keyName);
+				val = st.isMember(keyName);
 			}
 			endCpuTimeNano =  getCpuTime() - startCpuTimeNano;
 			double avgSearchCpuTimeNano = endCpuTimeNano/totalIterations; 
@@ -72,15 +72,15 @@ public class BTree2<T extends Comparable<T>> {
 			// gather the test results
 			int size = st.size();
 			int n = M-1;
-			int height = st.height();
+			int height = st.getHeight();
 			double avgSearchAccesses = (double)accesses/(totalIterations);
 			// add it to the list of results
 			results.add(new TestResult(size, n, height, avgInsertionCpuTimeNano, avgSearchCpuTimeNano, avgSearchAccesses));
 			
 			if(debug){
-				System.out.println("Tree size: " + st.size());
+				System.out.println("Tree size: " + size);
 				System.out.println("N value: " + (M-1));
-				System.out.println("Height: " + st.height());
+				System.out.println("Height: " + height);
 				System.out.println("Average insertion CPU time: " + avgInsertionCpuTimeNano + " nanoseconds");
 				System.out.println("Average search CPU time: " + avgSearchCpuTimeNano + " nanoseconds");
 				System.out.println("Average search accesses: " + (double)accesses/(totalIterations));
@@ -171,6 +171,10 @@ public class BTree2<T extends Comparable<T>> {
      */
     public int getHeight() {
         return getHeight(root);
+    }
+    
+    public int size() {
+    	return getSize(root);
     }
 
     private void insert(T info, Node node, Node parent, boolean right) {
@@ -284,6 +288,18 @@ public class BTree2<T extends Comparable<T>> {
             height = 1 + Math.max(getHeight(node.left), getHeight(node.right));
         }
         return height;
+    }
+    
+    private int getSize(Node node){
+    	int l = 0,r = 0;
+    	if(node.left != null){
+    		l = getSize(node.left);
+    	}
+    	if(node.right != null){
+    		r = getSize(node.right);
+    	}
+    	return l + r;
+    	
     }
 
     private String inOrder(Node node) {

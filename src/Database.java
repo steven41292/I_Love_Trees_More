@@ -47,9 +47,9 @@ public class Database {
 	        }
 
 	        testResults1.addAll(BTree1.runTests(totalIterations, treeSize, database, indexArr));
-	        
+
 	        // CALL YOUR B TREE BELOW LIKE THIS:
-	        //testResults2.addAll(BTree2.runTests(totalIterations, treeSize, database, indexArr)); 
+	        testResults2.addAll(BTree2.runTests(totalIterations, treeSize, database, indexArr)); 
 	        //testResults3.addAll(BTree3.runTests(totalIterations, treeSize, database, indexArr));
 		}
 	}
