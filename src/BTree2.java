@@ -40,8 +40,8 @@ public class BTree2<T extends Comparable<T>> {
 		if(debug) System.out.println("********** B TREE 2 RESULTS **********\n");
 		
 		// run the code below for different max children values
-		for(int mIndex=0;mIndex<mArr.length;mIndex++){
-			M = mArr[mIndex]; // get M (max children for this run)
+		//for(int mIndex=0;mIndex<mArr.length;mIndex++){
+			//M = mArr[mIndex]; // get M (max children for this run)
 		
 			// initialize the tree
 			BTree2<String> st = new BTree2<String>();
@@ -71,15 +71,15 @@ public class BTree2<T extends Comparable<T>> {
 			
 			// gather the test results
 			int size = st.size();
-			int n = M-1;
+			//int n = M-1;
 			int height = st.getHeight();
 			double avgSearchAccesses = (double)accesses/(totalIterations);
 			// add it to the list of results
-			results.add(new TestResult(size, n, height, avgInsertionCpuTimeNano, avgSearchCpuTimeNano, avgSearchAccesses));
+			results.add(new TestResult(size, 2, height, avgInsertionCpuTimeNano, avgSearchCpuTimeNano, avgSearchAccesses));
 			
 			if(debug){
 				System.out.println("Tree size: " + size);
-				System.out.println("N value: " + (M-1));
+				System.out.println("N value: " + 2);
 				System.out.println("Height: " + height);
 				System.out.println("Average insertion CPU time: " + avgInsertionCpuTimeNano + " nanoseconds");
 				System.out.println("Average search CPU time: " + avgSearchCpuTimeNano + " nanoseconds");
@@ -87,7 +87,7 @@ public class BTree2<T extends Comparable<T>> {
 				System.out.println("================================");
 				System.out.println();
 			}
-		}
+		//}
 		
 		// return the results
 		return results;
@@ -202,12 +202,16 @@ public class BTree2<T extends Comparable<T>> {
         boolean member = false;
 
         if (node == null) {
+        	accesses++;
             member = false;
         } else if (info.compareTo(node.information) == 0) {
+        	accesses++;
             member = true;
         } else if (info.compareTo(node.information) > 0) {
+        	accesses++;
             member = isMember(info, node.right);
         } else {
+        	accesses++;
             member = isMember(info, node.left);
         }
 
