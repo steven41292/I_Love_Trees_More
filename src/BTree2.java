@@ -295,10 +295,12 @@ public class BTree2<T extends Comparable<T>> {
     	if(node.left != null){
     		l = getSize(node.left);
     	}
+    	
     	if(node.right != null){
     		r = getSize(node.right);
     	}
-    	return l + r;
+    	
+    	return l + r + 1;
     	
     }
 
