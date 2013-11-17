@@ -29,21 +29,22 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
     
     // ADD THE STUFF BELOW THIS
     private static long startCpuTimeNano, endCpuTimeNano;
-    private static int accesses = 0, totalIterations, treeSize;
+    private static int accesses = 0, totalIterations, treeSize, wastedSpace = 0, totalSpace = 0;
     private static List<Tuple> database;
     private static Random generator = new Random();
-    private static int[] indexArr;
-    private static boolean debug = true;   
+    private static int[] indexArrRandom, indexArrSequential;
+    private static boolean debug = false;   
     private static int M;    // max children per B-tree node = M-1
-    private final static int[] mArr = {4,5,6,11,16,21,26}; // max children values that I randomly chose
+    private final static int[] mArr = {4,5,6,11,16,21,26,51,101}; // max children values that I randomly chose
    
     
    // ADD THIS METHOD 
-    public static List<TestResult> runTests(int _totalIterations, int _treeSize, List<Tuple> _database, int[] _indexArr){
+    public static List<TestResult> runTests(int _totalIterations, int _treeSize, List<Tuple> _database, int[] _indexArrRandom, int[] _indexArrSequential){
 		List<TestResult> results = new ArrayList<TestResult>();
     	totalIterations = _totalIterations;
 		treeSize = _treeSize;
-		indexArr = _indexArr;
+		indexArrRandom = _indexArrRandom;
+		indexArrSequential = _indexArrSequential;
 		database = _database;
 
 		if(debug) System.out.println("********** B TREE 1 RESULTS **********\n");
@@ -56,6 +57,7 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
 			BTree1<String, String> st = new BTree1<String, String>();
 			
 			// add each node in the database to the b tree and time it
+			accesses = 0;
 			startCpuTimeNano = getCpuTime();
 			for(int i=0; i<database.size(); i++){
 				Tuple t = database.get(i);
@@ -63,36 +65,61 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
 			}
 			endCpuTimeNano = getCpuTime() - startCpuTimeNano;
 			double avgInsertionCpuTimeNano = endCpuTimeNano/totalIterations;
-
+			double avgInsertionAccesses = (double)accesses/(totalIterations);
+	
 			int index;
 			String val;
 			accesses = 0;
-			
+	
 			// search for the random nodes and find time it
 			startCpuTimeNano =  getCpuTime();
 			for(int i=0; i<totalIterations; i++){
-				index = indexArr[i];
+				index = indexArrRandom[i];
 				String keyName = "key" + index;
 				val = st.get(keyName);
 			}
 			endCpuTimeNano =  getCpuTime() - startCpuTimeNano;
-			double avgSearchCpuTimeNano = endCpuTimeNano/totalIterations; 
+			double avgRandomSearchCpuTimeNano = endCpuTimeNano/totalIterations; 
+			double avgRandomSearchAccesses = (double)accesses/(totalIterations);
+			
+			accesses = 0;
+			// search for the sequential nodes and find time it
+			startCpuTimeNano =  getCpuTime();
+			for(int i=0; i<totalIterations; i++){
+				index = indexArrSequential[i];
+				String keyName = "key" + index;
+				val = st.get(keyName);
+			}
+			endCpuTimeNano =  getCpuTime() - startCpuTimeNano;
+			double avgSequentialSearchCpuTimeNano = endCpuTimeNano/totalIterations;
+			double avgSequentialSearchAccesses = (double)accesses/(totalIterations);
 			
 			// gather the test results
 			int size = st.size();
 			int n = M-1;
 			int height = st.height();
-			double avgSearchAccesses = (double)accesses/(totalIterations);
+			
+			// generates wasted space percentage
+			wastedSpace = 0;
+			totalSpace = 0;
+			String t = st.toString();
+			
+			double wastedSpacePercentage = ((double)wastedSpace/(double)totalSpace) * 100;
+			
 			// add it to the list of results
-			results.add(new TestResult(size, n, height, avgInsertionCpuTimeNano, avgSearchCpuTimeNano, avgSearchAccesses));
+			results.add(new TestResult(size, n, height, avgInsertionCpuTimeNano, avgInsertionAccesses, avgRandomSearchCpuTimeNano, 
+							avgRandomSearchAccesses, avgSequentialSearchCpuTimeNano, avgSequentialSearchAccesses, wastedSpacePercentage));
 			
 			if(debug){
 				System.out.println("Tree size: " + st.size());
 				System.out.println("N value: " + (M-1));
 				System.out.println("Height: " + st.height());
 				System.out.println("Average insertion CPU time: " + avgInsertionCpuTimeNano + " nanoseconds");
-				System.out.println("Average search CPU time: " + avgSearchCpuTimeNano + " nanoseconds");
-				System.out.println("Average search accesses: " + (double)accesses/(totalIterations));
+				System.out.println("Average insertion accesses: " + avgInsertionAccesses);
+				System.out.println("Average random search CPU time: " + avgRandomSearchCpuTimeNano + " nanoseconds");
+				System.out.println("Average random search accesses: " + avgRandomSearchAccesses);
+				System.out.println("Average sequential search CPU time: " + avgSequentialSearchCpuTimeNano + " nanoseconds");
+				System.out.println("Average sequential search accesses: " + avgSequentialSearchAccesses);
 				System.out.println("================================");
 				System.out.println();
 			}
@@ -170,6 +197,7 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
         t.children[1] = new Entry(u.children[0].key, null, u);
         root = t;
         HT++;
+        accesses+=2;
     }
 
 
@@ -180,6 +208,7 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
         // external node
         if (ht == 0) {
             for (j = 0; j < h.m; j++) {
+            	accesses++;
                 if (less(key, h.children[j].key)) break;
             }
         }
@@ -187,6 +216,7 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
         // internal node
         else {
             for (j = 0; j < h.m; j++) {
+            	accesses++;
                 if ((j+1 == h.m) || less(key, h.children[j+1].key)) {
                     Node u = insert(h.children[j++].next, key, value, ht-1);
                     if (u == null) return null;
@@ -197,7 +227,11 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
             }
         }
 
-        for (int i = h.m; i > j; i--) h.children[i] = h.children[i-1];
+        for (int i = h.m; i > j; i--){
+        	accesses++;
+        	h.children[i] = h.children[i-1];
+        }
+        accesses++;
         h.children[j] = t;
         h.m++;
         if (h.m < M) return null;
@@ -208,19 +242,29 @@ public class BTree1<Key extends Comparable<Key>, Value>  {
     private Node split(Node h) {
         Node t = new Node(M/2);
         h.m = M/2;
-        for (int j = 0; j < M/2; j++)
+        for (int j = 0; j < M/2; j++){
+        	accesses++;
             t.children[j] = h.children[M/2+j]; 
+        }
         return t;    
     }
 
     // for debugging
+        
     public String toString() {
         return toString(root, HT, "") + "\n";
     }
     private String toString(Node h, int ht, String indent) {
         String s = "";
         Entry[] children = h.children;
-
+        
+        for(int i=0;i<children.length;i++){
+        	totalSpace++;
+        	if(children[i] == null){
+        		wastedSpace++;
+        	}
+        }
+        
         if (ht == 0) {
             for (int j = 0; j < h.m; j++) {
                 s += indent + children[j].key + " " + children[j].value + "\n";
